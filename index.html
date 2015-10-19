@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+
+<script id="primitive-vshader" type="x-shader/x-vertex">
+attribute vec4 aVertexPosition_ms;
+attribute vec4 aColor;
+
+varying vec4 vColor;
+
+uniform mat4 M;
+uniform mat4 V;
+uniform mat4 P;
+
+void main()
+{
+	vColor = aColor;
+	gl_Position = P*V*M*aVertexPosition_ms;
+}
+</script>
+
+<script id="primitive-fshader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+varying vec4 vColor;
+
+void main()
+{
+	gl_FragColor = vColor;
+}
+</script>
+
+<script id="phong-vshader" type="x-shader/x-vertex">
+
+precision mediump float;
+
+//ms - model space
+//ws - world space
+//cs - camera space (eye space)
+
+attribute vec3 aNormal_ms;
+attribute vec4 aVertexPosition_ms;
+attribute vec2 aTexcoord;
+
+varying vec2 vTexcoord;
+varying vec3 vVertexPosition_ws;
+varying vec3 vNormal_cs;
+varying vec3 vLightDirection_cs;
+varying vec3 vEyeDirection_cs;
+
+uniform vec3 uLightPosition_ws;
+
+uniform mat4 M;
+uniform mat4 V;
+uniform mat4 P;
+
+uniform mat3 N;
+
+void main()
+{
+	gl_Position = P*V*M*aVertexPosition_ms;
+	vVertexPosition_ws = (M*aVertexPosition_ms).xyz;
+	vec3 lightPosition_cs = ( V * vec4(uLightPosition_ws,1)).xyz;
+	vec3 vertexPosition_cs = (V * M * aVertexPosition_ms).xyz;
+
+	vEyeDirection_cs = vec3(0,0,0) - vertexPosition_cs;
+	vLightDirection_cs = lightPosition_cs - vertexPosition_cs;
+
+	vNormal_cs = N*aNormal_ms;
+	vTexcoord = aTexcoord;
+}
+
+</script>
+
+<script id="phong-fshader" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec2 vTexcoord;
+
+varying vec3 vVertexPosition_ws;
+varying vec3 vNormal_cs;
+varying vec3 vLightDirection_cs;
+varying vec3 vEyeDirection_cs;
+
+uniform sampler2D uTexture;
+uniform vec3 uLightPosition_ws;
+
+void main() {
+	vec3 LightColor = vec3(1,1,1);
+
+	vec3 MaterialDiffuseColor = texture2D( uTexture, vTexcoord ).rgb;
+	vec3 MaterialAmbientColor = 0.4 * MaterialDiffuseColor;
+
+	vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
+	
+	float distance = length(uLightPosition_ws - vVertexPosition_ws);
+
+	vec3 n = normalize(vNormal_cs);
+	vec3 l = normalize(vLightDirection_cs);
+	vec3 e = normalize(vEyeDirection_cs);
+	vec3 r = reflect(-l,n);
+
+	float cosTheta = clamp(dot(n,l), 0.0,1.0);
+
+	float cosAlpha = clamp( dot( e,r ), 0.0,1.0 );
+
+	float LightPower = 4000.0/(distance*distance);
+
+	float shininess=15.0;
+
+	gl_FragColor.rgb = 
+		MaterialAmbientColor +
+		MaterialDiffuseColor * LightColor * LightPower * cosTheta +
+		MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha, shininess); 
+
+	gl_FragColor.a = 1.0;
+}
+</script>
+
+<script type="text/javascript" src="common/webgl-utils.js"></script>
+<script type="text/javascript" src="common/initShaders.js"></script>
+<script type="text/javascript" src="common/MV.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script type="text/javascript" src="shaderProgram.js"></script>
+<script type="text/javascript" src="models.js"></script>
+<script type="text/javascript" src="eventHandling.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
+</head>
+	<body>
+		<canvas id="gl-canvas" width="800" height="800">
+		</canvas>
+	</body>
+
+	<div>
+	  Ugao kamere:
+	  <br>
+	  <input type="number" id="angle" min="10" max="80">	
+	</div>
+</html>
