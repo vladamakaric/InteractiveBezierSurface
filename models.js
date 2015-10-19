@@ -39,6 +39,81 @@ function concatenateArrOfArrs(arroarr){
 	return arr;
 }
 
+function getIndicesForGridMeshTriangleStrip(m, n){
+	var indices = [];
+
+	for(i=0; i<m-1; i++){
+
+		for(j=0; j<n; j++){
+			indices.push(i*n + j);
+			indices.push((i+1)*n + j);
+
+			if(j==n-1 && i!=m-2){
+				indices.push((i+1)*n + j);
+				indices.push((i+1)*n);
+			}
+		}
+	}
+
+	return indices;
+}
+
+function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
+	var du = 1/(uSamples-1);
+	var dv = 1/(vSamples-1);
+	var i,j;
+
+	var vertices = [];
+	// var texCoords = [];
+	// var normals = [];
+	var colors = [];
+	var indices = [];
+
+	for(i=0; i<uSamples; i++){
+		var u = i*du;
+
+		for(j=0; j<vSamples; j++){
+			var v = j*dv;
+
+			// var xTan = vec3(1, xPderiv(x,y), 0);
+			// var yTan = vec3(0, yPderiv(x,y), 1);
+            //
+			// var normal = cross(yTan, xTan);
+			// normals.push(normal);
+			// texCoords.push(j*dx/width, i*dy/height);
+
+			var p = surf(u,v);
+			vertices.push(p[0], p[1], p[2]);
+		}
+	}
+
+	// normals = concatenateArrOfArrs(normals);
+
+	indices = getIndicesForGridMeshTriangleStrip(uSamples,vSamples);
+
+	var colors = [];
+
+	for(var i=0; i<vertices.length/3; i++){
+		colors.push(Math.random(), Math.random(), Math.random(), 1);
+	}
+
+	var colorBuffer = createFloatArrayBuffer(gl, 4, colors);
+	var vertexBuffer = createFloatArrayBuffer(gl, 3, vertices);
+	console.log(vertices);
+
+
+	var indexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+	var attribBuffers = {vertex: vertexBuffer,
+				   color: colorBuffer
+				   };
+
+	return {indxBuffer:indexBuffer,attribBuffers,  
+		nVerts:vertices.length, nIndices:indices.length, primtype: gl.TRIANGLE_STRIP};
+}
+
 function Surface(func, xPderiv, yPderiv, width, height, wsamples, hsamples){
 	var dx = width/(wsamples-1);
 	var dy = height/(hsamples-1);
@@ -100,10 +175,6 @@ function Surface(func, xPderiv, yPderiv, width, height, wsamples, hsamples){
 
 
 function Tetrahedron(gl){
-
-
-
-
 	var theta = Math.PI*2/3;
 	var apex = [0,1,0];
 	var v1 = [1,0,0];

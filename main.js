@@ -16,6 +16,7 @@ var primitiveProgram;
 var lightModel;
 
 var lightPosition = [0, 60, 0];
+var bezierSurf;
 
 window.onload = function init()
 {
@@ -57,6 +58,15 @@ window.onload = function init()
 	// bindUniformsToProgram(sharedUniforms, phongProgram.id, gl);
 
 	lightModel = Tetrahedron(gl);
+
+	var q = [
+				[vec3(0,0,0), vec3(10,0,0), vec3(20,0,0), vec3(30,0,0)],
+				[vec3(0,0,10), vec3(10,0,10), vec3(20,0,10), vec3(30,50,10)],
+				[vec3(0,0,20), vec3(10,0,20), vec3(20,0,20), vec3(30,50,20)],
+				[vec3(0,0,30), vec3(10,0,30), vec3(20,0,30), vec3(30,0,30)]
+			];
+
+	bezierSurf = parametricSurface(function(u,v){ return bezierSurface(u,v,q);}, 0, 0, 30,30);
 	
 	texture = loadTexture(gl,"metal2.jpg");
 	texture2 = loadTexture(gl,"wood2.jpg");
@@ -128,6 +138,11 @@ function render() {
 
 	setProgramAttributes(gl, lightModel, primitiveProgram); 
 	drawObject(gl, lightModel);
+
+	sharedUniforms.M.set(flatten(scalem(1,1,1)));
+	setProgramAttributes(gl, bezierSurf, primitiveProgram);
+	drawObject(gl, bezierSurf);
+
 
 	requestAnimFrame( render );
 }
