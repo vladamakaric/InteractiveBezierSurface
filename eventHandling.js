@@ -1,3 +1,28 @@
+
+//position relative to canvas
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+}
+
+
+function viewPortToNDC(pos, w, h){
+	var x = 2*pos.x/w -1;
+	var y = -(2*pos.y/h -1);
+
+	return {x,y};
+}
+
+function rayVectorFromNDC(pos, fov, aspect){
+    var z = -1.0 / Math.tan( radians(fovy) / 2 );
+	var x = pos.x*aspect;
+	var y = pos.y;
+	return vec3(x,y,z);
+}
+
 function setUpEventHandling(canvas){
 
 	var angleInput = document.getElementById("angle");
@@ -7,10 +32,23 @@ function setUpEventHandling(canvas){
 		// fovy = angleInput.value;
 	}
 
+	canvas.onclick = function(event){
+		var pos = getMousePos(canvas, event);
+
+		pos = viewPortToNDC(pos, canvas.width, canvas.height);
+		console.log(pos.x + "  " + pos.y);
+	}
+
 	canvas.onmousewheel = function (event){
+
+
+
+
+
+
 		var wheel = event.wheelDelta/120;
-		cameraDistance+=wheel;
-		cameraDistance = Math.max(cameraDistance, 0);
+
+		camera.zoom(wheel);
 	}
 
 	document.onkeydown = checkKey;
@@ -20,13 +58,6 @@ function setUpEventHandling(canvas){
 		lightSpeed = 3;
 
 		switch(e.keyCode){
-			case 38: 
-				cameraY +=5; 
-				break;
-			case 40: 
-				cameraY -=5; 
-				break;
-
 			case 68: //d
 				lightPosition[0] += lightSpeed;
 				keyD = true;
@@ -40,8 +71,7 @@ function setUpEventHandling(canvas){
 				keyA = true;
 				break;
 			case 87: //w
-				lightPosition[2] += lightSpeed;
-				keyW = true;
+				camera.pan({x: 0, y:1});
 				break;
 			case 74: //j
 				lightPosition[1] -= lightSpeed;

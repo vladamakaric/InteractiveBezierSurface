@@ -1,8 +1,6 @@
 var gl;
 var t = 0;
 
-var cameraY = 100;
-var cameraDistance = 100;
 
 var texture;
 var texture2;
@@ -17,6 +15,55 @@ var lightModel;
 
 var lightPosition = [0, 60, 0];
 var bezierSurf;
+var coordSys;
+
+var mouseRay;
+var camera;
+
+function Camera(eye, dir, up, vFov, aspect, near, far){
+
+	var V = lookAt(eye, add(eye,dir), up);
+	var VInv = inverse(V);
+	var P = perspective(vFov, aspect, near, far);
+
+	function changeView(newEye, newDir, newUp){
+		eye = newEye || eye;
+		dir = newDir || dir;
+		up = newUp || up;
+
+		V = lookAt(eye, add(eye,dir), up);
+	}
+
+	function zoom(f){
+		changeView(add(eye, scale(f,dir)), dir, up);
+	}
+
+	function getViewMatrix(){
+		return V;
+	}
+
+	function getPerspectiveMatrix(){
+		return P;
+	}
+
+	function pan(imagePlaneDelta){
+		console.log(imagePlaneDelta);
+		var smor = vec4(imagePlaneDelta.x, imagePlaneDelta.y, 0.0,0.0);
+		var delta = mult(V, vec4(1,0,0,0));
+
+
+		console.log(delta);
+		var deltaV3 = vec3(delta[0], delta[1], delta[2]);
+		changeView(add(eye, scale(10,deltaV3)), dir, up);
+	}
+
+	return {eye, dir, up, vFov, aspect,
+		getPerspectiveMatrix,
+		getViewMatrix,
+		zoom,
+		pan
+	};
+}
 
 window.onload = function init()
 {
@@ -29,6 +76,9 @@ window.onload = function init()
 
 	gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 	gl.enable(gl.DEPTH_TEST);
+
+	
+	camera = Camera(vec3(100,100,100), vec3(-1,-1,-1), vec3(0,1,0), 60,  canvas.width/canvas.height, 10,1000); 
 
 	// phongProgram = ShaderProgram(gl, "phong-vshader", "phong-fshader", {
 	// 	normal: {name: "aNormal_ms"},
@@ -67,6 +117,7 @@ window.onload = function init()
 			];
 
 	bezierSurf = parametricSurface(function(u,v){ return bezierSurface(u,v,q);}, 0, 0, 30,30);
+	coordSys = CoordSys(gl);
 	
 	texture = loadTexture(gl,"metal2.jpg");
 	texture2 = loadTexture(gl,"wood2.jpg");
@@ -88,11 +139,10 @@ function render() {
 	gl.clear(gl.COLOR_BUFFER_BIT  | gl.DEPTH_BUFFER_BIT);
 	t+=0.009;
 
-	var V =  lookAt([cameraDistance*Math.cos(t),(cameraDistance/100)*cameraY,cameraDistance*Math.sin(t)], [0,0,0], [0,1,0]);
 	var M;
 
-	var sharedUniformData = {P: flatten(perspective(60, 1, 10, 1000)),
-							 V: flatten(V)};
+	var sharedUniformData = {P: flatten(camera.getPerspectiveMatrix()),
+							 V: flatten(camera.getViewMatrix())};
 
 	// useProgram(gl, phongProgram, sharedUniforms, sharedUniformData);
 	// phongProgram.uniforms.lightPosition_ws.set(flatten(lightPosition));
@@ -143,6 +193,10 @@ function render() {
 	setProgramAttributes(gl, bezierSurf, primitiveProgram);
 	drawObject(gl, bezierSurf);
 
+	sharedUniforms.M.set(flatten(scalem(10,10,10)));
+	setProgramAttributes(gl, coordSys, primitiveProgram);
+	gl.lineWidth(2);
+	drawObject(gl, coordSys);
 
 	requestAnimFrame( render );
 }

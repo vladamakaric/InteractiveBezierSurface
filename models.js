@@ -58,6 +58,37 @@ function getIndicesForGridMeshTriangleStrip(m, n){
 	return indices;
 }
 
+function CoordSys(gl){
+
+	var vertexBuffer = createFloatArrayBuffer(gl, 3,[
+		//x
+		1.0,0.0,0.0, 
+		0.0,0.0,0.0,
+		//y
+		0.0,0.0,0.0,
+		0.0,1.0,0.0,
+		//z
+		0.0,0.0,0.0,
+		0.0,0.0,1.0
+	]);
+
+	var colorBuffer = createFloatArrayBuffer(gl, 4, [
+		1.0, 0.0, 0.0, 1.0, 
+		1.0, 0.0, 0.0, 1.0, 
+
+		0.0, 1.0, 0.0, 1.0, 
+		0.0, 1.0, 0.0, 1.0, 
+
+		0.0, 0.0, 1.0, 1.0, 
+		0.0, 0.0, 1.0, 1.0
+	]);
+
+	var attribBuffers = {vertex: vertexBuffer, color: colorBuffer};
+
+	return {attribBuffers,  nVerts: 6, primtype: gl.LINES};
+}
+
+
 function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
 	var du = 1/(uSamples-1);
 	var dv = 1/(vSamples-1);
