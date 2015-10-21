@@ -274,7 +274,29 @@ function subtract( u, v )
 
 function mult( u, v )
 {
+
     var result = [];
+
+	//////////////////////////////////////////////////////////////////
+	
+	//matrix vector multiplication
+	if(u.matrix && !v.matrix && u.length == v.length){
+		
+		var n=u.length;
+		
+		for(var i=0; i<n; i++){
+			result.push(0);
+			for(var j=0; j<n; j++){
+				result[i] += u[i][j]*v[j];
+			}
+		}
+
+		return result;
+	}
+
+	/////////////////////////////////////////////////////////////////
+
+
 
     if ( u.matrix && v.matrix ) {
         if ( u.length != v.length ) {
@@ -665,6 +687,7 @@ var sizeof = {
 // new functions 5/2/2015
 
 // printing
+
 
 function printm(m)
 {

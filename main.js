@@ -32,6 +32,7 @@ function Camera(eye, dir, up, vFov, aspect, near, far){
 		up = newUp || up;
 
 		V = lookAt(eye, add(eye,dir), up);
+		VInv = inverse(V);
 	}
 
 	function zoom(f){
@@ -46,14 +47,23 @@ function Camera(eye, dir, up, vFov, aspect, near, far){
 		return P;
 	}
 
+	function rotateAroundWSOrigin(angle, axis_cs){
+		var axis_ws = mult(VInv, vec4(axis_cs,0));	
+
+		var R = rotate((180/Math.PI)*angle, axis_ws);
+		newEye = vec3(mult(R, vec4(eye, 1)));
+		newDir = vec3(mult(R, vec4(dir,0)));
+		newUp = vec3(mult(R, vec4(up,0)));
+
+		changeView(newEye, newDir, newUp);
+	}
+
 	function pan(imagePlaneDelta){
 		console.log(imagePlaneDelta);
-		var smor = vec4(imagePlaneDelta.x, imagePlaneDelta.y, 0.0,0.0);
-		var delta = mult(V, vec4(1,0,0,0));
+		var delta_cs = vec4(imagePlaneDelta.x, imagePlaneDelta.y, 0.0,0.0);
+		var delta_ws = mult(VInv, delta_cs);
 
-
-		console.log(delta);
-		var deltaV3 = vec3(delta[0], delta[1], delta[2]);
+		var deltaV3 = vec3(delta_ws[0], delta_ws[1], delta_ws[2]);
 		changeView(add(eye, scale(10,deltaV3)), dir, up);
 	}
 
@@ -61,7 +71,8 @@ function Camera(eye, dir, up, vFov, aspect, near, far){
 		getPerspectiveMatrix,
 		getViewMatrix,
 		zoom,
-		pan
+		pan,
+		rotateAroundWSOrigin
 	};
 }
 
