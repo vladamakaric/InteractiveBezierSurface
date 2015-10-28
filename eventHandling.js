@@ -1,4 +1,3 @@
-
 //position relative to canvas
 function getMousePos(canvas, evt) {
     var rect = canvas.getBoundingClientRect();
@@ -6,15 +5,14 @@ function getMousePos(canvas, evt) {
     return vec2(evt.clientX - rect.left, evt.clientY - rect.top);
 }
 
-
 function viewPortToNDC(pos, w, h){
-	var x = 2*pos[0]/w -1;
-	var y = -(2*pos[1]/h -1);
+	var x = pos[0]/(w/2);
+	var y = pos[1]/(h/2);
 
 	return vec2(x,y);
 }
 
-function rayVectorFromNDC(pos, fov, aspect){
+function rayVectorFromNDC(pos, fovy, aspect){
     var z = -1.0 / Math.tan( radians(fovy) / 2 );
 	var x = pos[0]*aspect;
 	var y = pos[1];
@@ -41,15 +39,11 @@ function getSphereIntercept(v, w, h){
 	}
 }
 
-
-
 function PinchRotateMS(msm){
 	var self = BaseMouseState(msm);
 
 	self.mousemove = function(){
 			var deltaDrag = subtract(msm.mousePos, msm.prevMousePos);
-
-			console.log(msm.mousePos);
 
 			if(length(deltaDrag)>0.1){
 				var start = getSphereIntercept(msm.prevMousePos, msm.width, msm.height);
@@ -66,7 +60,15 @@ function PinchRotateMS(msm){
 
 function BaseMouseState(msm){
 	return {
-		mousemove: function(){},
+		mousemove: function(){
+			 console.log("smor");
+			 mouseRay = msm.getRayFromMousePos();
+			
+			 draggablePoints.updateClosestPointToRay(mouseRay);
+
+
+
+		},
 		mouseup: function(){
 			msm.currentState = BaseMouseState(msm);
 		},
@@ -75,15 +77,16 @@ function BaseMouseState(msm){
 		},
 		mousewheel: function(delta){
 			camera.zoom(delta);
-		},
-		mousemove: function(){}
+		}
 	};
 }
 
 //positions are viewport centralized
-function MouseStateMachine(w,h){
+function MouseStateMachine(w,h, fovy){
 
 	var self = {};
+	self.closestDPoint = undefined;
+
 
 	self.width = w;
 	self.height = h;
@@ -91,9 +94,12 @@ function MouseStateMachine(w,h){
 	self.prevMousePos = undefined;
 	self.currentState = BaseMouseState(self);
 
+	self.getRayFromMousePos = function(){
+		return camera.getRayFromNDCPos(viewPortToNDC(self.mousePos, self.width, self.height));
+	}
+
 	self.mousemove = function(pos){
 		self.mousePos = pos;
-		console.log(self.mousePos);
 		self.currentState.mousemove();
 		self.prevMousePos = pos;
 	}
@@ -114,9 +120,9 @@ function MouseStateMachine(w,h){
 	return self;
 }
 
-function setUpEventHandling(canvas){
+function setUpEventHandling(canvas, fov){
 
-	var msm = MouseStateMachine(canvas.width, canvas.height);
+	var msm = MouseStateMachine(canvas.width, canvas.height, fov);
 
 	var angleInput = document.getElementById("angle");
 	// angleInput.value = fovy;
