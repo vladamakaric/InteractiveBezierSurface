@@ -22,85 +22,9 @@ var camera;
 
 var mouseRay;
 
-function Camera(eye, dir, up, vFov, aspect, near, far){
-
-	var V = lookAt(eye, add(eye,dir), up);
-	var VInv = inverse(V);
-	var P = perspective(vFov, aspect, near, far);
-	var self = {};
-
-	self.eye = eye;
-	self.dir = dir;
-	self.up = up;
-	self.vFov = vFov;
-	self.aspect = aspect;
-
-	function changeView(newEye, newDir, newUp){
-		self.eye = newEye || self.eye;
-		self.dir = newDir || self.dir;
-		self.up = newUp || self.up;
-
-		V = lookAt(self.eye, add(self.eye,self.dir), self.up);
-		VInv = inverse(V);
-	}
-
-	self.zoom = function(f){
-		changeView(add(self.eye, scale(f,self.dir)), self.dir, self.up);
-	}
-
-	self.getViewMatrix = function(){
-		return V;
-	}
-
-	self.getPerspectiveMatrix = function(){
-		return P;
-	}
-
-// function rayVectorFromNDC(pos, fovy, aspect){
-//     var z = -1.0 / Math.tan( radians(fovy) / 2 );
-// 	var x = pos[0]*aspect;
-// 	var y = pos[1];
-// 	return vec3(x,y,z);
-// }
-
-	self.getRayFromNDCPos = function(p_ndc){
-		var rdir_cs = rayVectorFromNDC(p_ndc, self.vFov, self.aspect);
-		var rdir_ws = vec3(mult(VInv, vec4(rdir_cs,0)));
-
-		console.log(rdir_ws);
-
-		return Ray(self.eye, rdir_ws);
-	}
-
-	self.getInvViewMatrix = function(){
-		return VInv;
-	}
-
-
-	self.rotateAroundWSOrigin = function(angle, axis_cs){
-		var axis_ws = mult(VInv, vec4(axis_cs,0));	
-
-		var R = rotate((180/Math.PI)*angle, axis_ws);
-		newEye = vec3(mult(R, vec4(self.eye, 1)));
-		newDir = vec3(mult(R, vec4(self.dir,0)));
-		newUp = vec3(mult(R, vec4(self.up,0)));
-
-		changeView(newEye, newDir, newUp);
-	}
-
-	// function pan(imagePlaneDelta){
-	// 	console.log(imagePlaneDelta);
-	// 	var delta_cs = vec4(imagePlaneDelta.x, imagePlaneDelta.y, 0.0,0.0);
-	// 	var delta_ws = mult(VInv, delta_cs);
-    //
-	// 	var deltaV3 = vec3(delta_ws[0], delta_ws[1], delta_ws[2]);
-	// 	changeView(add(eye, scale(10,deltaV3)), dir, up);
-	// }
-
-	return self;
-}
-
 var draggablePoints;
+
+var gimbal;
 
 window.onload = function init()
 {
@@ -118,7 +42,7 @@ window.onload = function init()
 	lightPosition = ObservablePoint(vec3(0,60,0));
 	camera = Camera(vec3(100,100,100), vec3(-1,-1,-1), vec3(0,1,0), fovy,  canvas.width/canvas.height, 1,1000); 
 
-	draggablePoints = DraggablePoints([ObservablePoint(vec3(100,100,100)), ObservablePoint(vec3(100,100,-100)), lightPosition]);
+	draggablePoints = DraggablePoints([ObservablePoint(vec3(100,100,-100)), lightPosition]);
 
 	// phongProgram = ShaderProgram(gl, "phong-vshader", "phong-fshader", {
 	// 	normal: {name: "aNormal_ms"},
@@ -138,10 +62,11 @@ window.onload = function init()
 	};
 
 	primitiveProgram = ShaderProgram(gl, "primitive-vshader", "primitive-fshader", {
-		vertex: {name: "aVertexPosition_ms"},
-		color: {name: "aColor"}
+		vertex: {name: "aVertexPosition_ms"}
 	},
-	{});
+	{ 
+		color: {name: "uColor", setter: gl.uniform4fv}
+	});
 
 	// useProgram(gl, phongProgram);
     //
@@ -162,8 +87,19 @@ window.onload = function init()
 	texture = loadTexture(gl,"metal2.jpg");
 	texture2 = loadTexture(gl,"wood2.jpg");
 
+	var origin = vec3(0,0,0);
+
+	gimbal = {
+		r: Line(gl, origin, vec3(1,0,0)),
+		g: Line(gl, origin, vec3(0,1,0)),
+		b: Line(gl, origin, vec3(0,0,1))
+	};
 	setUpEventHandling(canvas, fovy);
 	render();
+
+
+
+
 };
 
 
@@ -220,7 +156,10 @@ function render() {
 
 	unloadProgram(primitiveProgram, gl);
 
+
 	useProgram(gl, primitiveProgram, sharedUniforms, sharedUniformData);
+
+	primitiveProgram.uniforms.color.set([1,1,1,1]);
 
 	setProgramAttributes(gl, lightModel, primitiveProgram); 
 
@@ -232,36 +171,61 @@ function render() {
 		drawObject(gl, lightModel);
 	});
 
-	
-
-
 	sharedUniforms.M.set(flatten(scalem(1,1,1)));
 	setProgramAttributes(gl, bezierSurf, primitiveProgram);
 	drawObject(gl, bezierSurf);
 
-	sharedUniforms.M.set(flatten(scalem(10,10,10)));
-	setProgramAttributes(gl, coordSys, primitiveProgram);
-	gl.lineWidth(2);
-	drawObject(gl, coordSys);
+	// sharedUniforms.M.set(flatten(scalem(10,10,10)));
+	// setProgramAttributes(gl, coordSys, primitiveProgram);
+	// gl.lineWidth(2);
+	// drawObject(gl, coordSys);
+    //
+	
+
 
 	if(draggablePoints.closestPoint){
-		var dp = draggablePoints.closestPoint;
-		M = mult(translate(dp.position[0], dp.position[1], dp.position[2]), scalem(5,5,5));
-		sharedUniforms.M.set(flatten(M));
 
-		gl.lineWidth(4);
-		drawObject(gl, coordSys);
+		gl.lineWidth(2);
+		drawGimbal(gl, sharedUniforms, primitiveProgram, draggablePoints.getNormalizedCPLocation(), 5, null);
 	}
 
-	if(mouseRay){
-		var endP = add(mouseRay.o, scale(20, mouseRay.d));
+	
 
-		var line = lineModel(gl, endP, add(mouseRay.o, scale(100, mouseRay.d)));
 
-		setProgramAttributes(gl, line, primitiveProgram);
-		sharedUniforms.M.set(flatten(scalem(1,1,1)));
-		drawObject(gl, line);
-	}
+
+	// if(mouseRay){
+	// 	var endP = add(mouseRay.o, scale(20, mouseRay.d));
+    //
+	// 	var line = Line(gl, endP, add(mouseRay.o, scale(100, mouseRay.d)));
+    //
+	// 	setProgramAttributes(gl, line, primitiveProgram);
+	// 	sharedUniforms.M.set(flatten(scalem(1,1,1)));
+	// 	drawObject(gl, line);
+	// }
 
 	requestAnimFrame( render );
 }
+
+function drawGimbal(gl, sharedUniforms, program, pos, size, state){
+
+	var M = mult(translate(pos[0],pos[1], pos[2]), scalem(size,size, size));
+	sharedUniforms.M.set(flatten(M));
+
+	program.uniforms.color.set([1,0,0,1]);
+	setProgramAttributes(gl, gimbal.r, primitiveProgram);
+	drawObject(gl, gimbal.r);
+
+	program.uniforms.color.set([0,1,0,1]);
+	setProgramAttributes(gl, gimbal.g, primitiveProgram);
+	drawObject(gl, gimbal.g);
+
+	program.uniforms.color.set([0,0,1,1]);
+	setProgramAttributes(gl, gimbal.b, primitiveProgram);
+	drawObject(gl, gimbal.b);
+}
+
+
+
+
+
+

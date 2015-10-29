@@ -573,6 +573,13 @@ function length( u )
 
 //----------------------------------------------------------------------------
 
+
+function dehomogenize(hv4){
+	var w = hv4[3];
+	return vec3(hv4[0]/w, hv4[1]/w, hv4[2]/w);
+}
+
+
 function normalize( u, excludeLastComponent )
 {
     if ( excludeLastComponent ) {

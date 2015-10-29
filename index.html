@@ -5,9 +5,6 @@
 
 <script id="primitive-vshader" type="x-shader/x-vertex">
 attribute vec4 aVertexPosition_ms;
-attribute vec4 aColor;
-
-varying vec4 vColor;
 
 uniform mat4 M;
 uniform mat4 V;
@@ -15,7 +12,6 @@ uniform mat4 P;
 
 void main()
 {
-	vColor = aColor;
 	gl_Position = P*V*M*aVertexPosition_ms;
 }
 </script>
@@ -23,12 +19,11 @@ void main()
 <script id="primitive-fshader" type="x-shader/x-fragment">
 
 precision mediump float;
-
-varying vec4 vColor;
+uniform vec4 uColor;
 
 void main()
 {
-	gl_FragColor = vColor;
+	gl_FragColor = uColor;
 }
 </script>
 
@@ -128,6 +123,7 @@ void main() {
 <script type="text/javascript" src="mathUtils.js"></script>
 <script type="text/javascript" src="bezierSurface.js"></script>
 <script type="text/javascript" src="models.js"></script>
+<script type="text/javascript" src="camera.js"></script>
 <script type="text/javascript" src="draggablePoints.js"></script>
 <script type="text/javascript" src="eventHandling.js"></script>
 <script type="text/javascript" src="main.js"></script>

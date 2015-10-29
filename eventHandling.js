@@ -41,9 +41,10 @@ function getSphereIntercept(v, w, h){
 
 function PinchRotateMS(msm){
 	var self = BaseMouseState(msm);
+	draggablePoints.deactivate();
 
 	self.mousemove = function(){
-			var deltaDrag = subtract(msm.mousePos, msm.prevMousePos);
+			var deltaDrag = msm.getMouseDelta(); 
 
 			if(length(deltaDrag)>0.1){
 				var start = getSphereIntercept(msm.prevMousePos, msm.width, msm.height);
@@ -57,17 +58,24 @@ function PinchRotateMS(msm){
 	return self;
 }
 
+function PointDragMS(msm){
+	var self = BaseMouseState(msm);
+
+	self.mousemove = function(){
+
+	}
+
+	self.mousewheel = function(){};
+}
 
 function BaseMouseState(msm){
+	function updateClosestDraggablePointToMouse(){
+		draggablePoints.updateClosestPointToRay(msm.getRayFromMousePos(), msm.getNDCMousePos());
+	}
+
 	return {
 		mousemove: function(){
-			 console.log("smor");
-			 mouseRay = msm.getRayFromMousePos();
-			
-			 draggablePoints.updateClosestPointToRay(mouseRay);
-
-
-
+			updateClosestDraggablePointToMouse();
 		},
 		mouseup: function(){
 			msm.currentState = BaseMouseState(msm);
@@ -77,6 +85,7 @@ function BaseMouseState(msm){
 		},
 		mousewheel: function(delta){
 			camera.zoom(delta);
+			updateClosestDraggablePointToMouse();
 		}
 	};
 }
@@ -94,8 +103,16 @@ function MouseStateMachine(w,h, fovy){
 	self.prevMousePos = undefined;
 	self.currentState = BaseMouseState(self);
 
+	self.getMouseDelta = function(){
+		return subtract(self.mousePos, self.prevMousePos);
+	}
+
 	self.getRayFromMousePos = function(){
 		return camera.getRayFromNDCPos(viewPortToNDC(self.mousePos, self.width, self.height));
+	}
+
+	self.getNDCMousePos = function(){
+		return viewPortToNDC(self.mousePos, self.width, self.height);
 	}
 
 	self.mousemove = function(pos){

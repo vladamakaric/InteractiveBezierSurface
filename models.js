@@ -88,20 +88,12 @@ function CoordSys(gl){
 	return {attribBuffers,  nVerts: 6, primtype: gl.LINES};
 }
 
-function lineModel(gl, pos1, pos2){
+function Line(gl, pos1, pos2){
 	var arr = pos1.concat(pos2);
 	var vertexBuffer = createFloatArrayBuffer(gl, 3,arr);
-	var colorBuffer = createFloatArrayBuffer(gl, 4, [
-		1.0, 1.0, 1.0, 1.0, 
-		1.0, 1.0, 1.0, 1.0
-	]);
-	
-	var attribBuffers = {vertex: vertexBuffer, color: colorBuffer};
-
+	var attribBuffers = {vertex: vertexBuffer};
 	return {attribBuffers,  nVerts: 2, primtype: gl.LINES};
 }
-
-
 
 function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
 	var du = 1/(uSamples-1);
@@ -144,16 +136,13 @@ function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
 
 	var colorBuffer = createFloatArrayBuffer(gl, 4, colors);
 	var vertexBuffer = createFloatArrayBuffer(gl, 3, vertices);
-	console.log(vertices);
 
 
 	var indexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
-	var attribBuffers = {vertex: vertexBuffer,
-				   color: colorBuffer
-				   };
+	var attribBuffers = {vertex: vertexBuffer};
 
 	return {indxBuffer:indexBuffer,attribBuffers,  
 		nVerts:vertices.length, nIndices:indices.length, primtype: gl.TRIANGLE_STRIP};
@@ -237,19 +226,7 @@ function Tetrahedron(gl){
 			v3
 			]));
 
-	var colBuff = createFloatArrayBuffer(gl, 4, [
-			1,1,1,1,
-			1,1,1,1,
-			1,1,1,1,
-			1,1,1,1,
-			1,1,1,1,
-			1,1,1,1,
-			1,1,1,1,
-			1,1,1,1
-			]);
-
-	var attribBuffers = {vertex: vertBuff,
-				   color: colBuff};
+	var attribBuffers = {vertex: vertBuff};
 
 	return {attribBuffers,  nVerts: 8, primtype: gl.LINE_STRIP};
 }
