@@ -103,13 +103,42 @@ function Line(gl, pos1, pos2){
 }
 
 function getParametricSurfaceVertices(surf, uSamples, vSamples){
+	var vertices = [];
+
+	iterateThroughParameterSpace(uSamples, vSamples, function(u,v){
+		var p = surf(u,v);
+		vertices.push(p[0], p[1], p[2]);
+	});
+
+	return vertices;
+}
+
+function getParametricSurfaceTexCoords(surf, uSamples, vSamples){
+
+	var texCoords = [];
+	iterateThroughParameterSpace(uSamples, vSamples, function(u,v){
+		texCoords.push(u,v);
+	});
+
+	return texCoords;
+}
+
+function getParametricSurfaceNormals(surf, uSamples, vSamples){
+	var normals = [];
+
+	iterateThroughParameterSpace(uSamples, vSamples, function(u,v){
+		var p = surf(u,v);
+		normals.push(0,1,0);
+	});
+
+	return normals;
+}
+
+function iterateThroughParameterSpace(uSamples, vSamples, iteratee){
+
 	var du = 1/(uSamples-1);
 	var dv = 1/(vSamples-1);
 	var i,j;
-	var vertices = [];
-
-	// var texCoords = [];
-	// var normals = [];
 
 	for(i=0; i<uSamples; i++){
 		var u = i*du;
@@ -117,29 +146,40 @@ function getParametricSurfaceVertices(surf, uSamples, vSamples){
 		for(j=0; j<vSamples; j++){
 			var v = j*dv;
 
-			// var xTan = vec3(1, xPderiv(x,y), 0);
-			// var yTan = vec3(0, yPderiv(x,y), 1);
-            //
-			// var normal = cross(yTan, xTan);
-			// normals.push(normal);
-			// texCoords.push(j*dx/width, i*dy/height);
-
-			var p = surf(u,v);
-			vertices.push(p[0], p[1], p[2]);
+			iteratee(u,v);
 		}
 	}
-
-	return vertices;
 }
 
+
+
+// function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
+// 	var indices = getIndicesForGridMeshTriangleStrip(uSamples,vSamples);
+// 	var vertices = getParametricSurfaceVertices(surf, uSamples, vSamples);
+// 	var vertexBuffer = createFloatArrayBuffer(gl, 3, vertices);
+// 	var indexBuffer = createIndexBuffer(gl, indices);
+//
+// 	var attribBuffers = {vertex: vertexBuffer};
+//
+// 	return {indxBuffer:indexBuffer,attribBuffers,  
+// 		nVerts:vertices.length, nIndices:indices.length, primtype: gl.TRIANGLE_STRIP};
+// }
 
 function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
 	var indices = getIndicesForGridMeshTriangleStrip(uSamples,vSamples);
 	var vertices = getParametricSurfaceVertices(surf, uSamples, vSamples);
-	var vertexBuffer = createFloatArrayBuffer(gl, 3, vertices);
+	var normals = getParametricSurfaceNormals(surf, uSamples, vSamples);
+	var texCoords = getParametricSurfaceTexCoords(surf, uSamples, vSamples);
+
 	var indexBuffer = createIndexBuffer(gl, indices);
 
-	var attribBuffers = {vertex: vertexBuffer};
+	var normalBuffer = createFloatArrayBuffer(gl, 3, normals);
+	var texCoordBuffer = createFloatArrayBuffer(gl, 2, texCoords);
+	var vertexBuffer = createFloatArrayBuffer(gl, 3, vertices);
+
+	var attribBuffers = {vertex: vertexBuffer,
+				   normal: normalBuffer,
+				   texcoord: texCoordBuffer};
 
 	return {indxBuffer:indexBuffer,attribBuffers,  
 		nVerts:vertices.length, nIndices:indices.length, primtype: gl.TRIANGLE_STRIP};

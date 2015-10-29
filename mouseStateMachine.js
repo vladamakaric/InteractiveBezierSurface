@@ -140,7 +140,7 @@ function getSphereIntercept(v, w, h){
 	//when outside of sphere map vector to circle 
 	//(sphere with plane z=0 intercept) x^2 + y^2 = r^2
 	if(r<l){
-		var inter  = scale(r, getNormalized(v));
+		var inter = scale(r, getNormalized(v));
 		return vec3(inter[0],inter[1],0);
 	}
 	else{

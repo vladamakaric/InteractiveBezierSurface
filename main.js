@@ -39,19 +39,19 @@ window.onload = function init()
 	draggablePoints = DraggablePoints([ObservablePoint(vec3(100,100,-100))]);
 	draggablePoints.addObservablePoints([lightPosition]);
 
-	BSM = BezierSurfaceModel(vec3(0,0,0), 10, 10, 30, 30);
+	BSM = BezierSurfaceModel(vec3(-20,0,-20), 10, 10, 30, 30);
 	draggablePoints.addObservablePoints(BSM.controlPoints);
 
-	// phongProgram = ShaderProgram(gl, "phong-vshader", "phong-fshader", {
-	// 	normal: {name: "aNormal_ms"},
-	// 	vertex: {name: "aVertexPosition_ms"},
-	// 	texcoord: {name: "aTexcoord"}
-	// }, 
-	// {
-	// 	lightPosition_ws : {name: "uLightPosition_ws", setter: gl.uniform3fv},
-	// 	N: {name: "N", setter: setMat3fv(gl)}
-	// }
-	// );
+	phongProgram = ShaderProgram(gl, "phong-vshader", "phong-fshader", {
+		normal: {name: "aNormal_ms"},
+		vertex: {name: "aVertexPosition_ms"},
+		texcoord: {name: "aTexcoord"}
+	}, 
+	{
+		lightPosition_ws : {name: "uLightPosition_ws", setter: gl.uniform3fv},
+		N: {name: "N", setter: setMat3fv(gl)}
+	}
+	);
 
 	sharedUniforms = {
 		P: {name: "P", setter: setMat4fv(gl)},
@@ -100,26 +100,28 @@ function render() {
 	t+=0.009;
 
 	var M;
+	var P = camera.getPerspectiveMatrix();
+	var V = camera.getViewMatrix();
 
-	var sharedUniformData = {P: flatten(camera.getPerspectiveMatrix()),
-							 V: flatten(camera.getViewMatrix())};
-
-	// useProgram(gl, phongProgram, sharedUniforms, sharedUniformData);
-	// phongProgram.uniforms.lightPosition_ws.set(flatten(lightPosition));
+	var sharedUniformData = {P: flatten(P),
+							 V: flatten(V)};
 
 
-	// ////////////////////////////////////////////////////
-	// gl.bindTexture(gl.TEXTURE_2D, texture2);
-	// setProgramAttributes(gl, cone, phongProgram); 
-    //
-	// M = mult(translate(60, 0, 0), scalem(20,50,20));
-	// sharedUniforms.M.set(flatten(M));
-	// phongProgram.uniforms.N.set(flatten(getNormalTransformMat3(V,M)));
-	// drawObject(gl, cone);
+	unloadProgram(primitiveProgram, gl);
+	useProgram(gl, phongProgram, sharedUniforms, sharedUniformData);
+	phongProgram.uniforms.lightPosition_ws.set(flatten(lightPosition.position));
+	M = scalem(1,1,1);
+	phongProgram.uniforms.N.set(flatten(getNormalTransformMat3(V,M)));
+	sharedUniforms.M.set(flatten(M));
+	////////////////////////////////////////////////////
+	gl.bindTexture(gl.TEXTURE_2D, texture2);
+
+	setProgramAttributes(gl, BSM.surface , phongProgram);
+	drawObject(gl, BSM.surface);
+
     //
 	// M = mult(translate(-60, 0, 0), scalem(20,50,20));
 	// sharedUniforms.M.set(flatten(M));
-	// phongProgram.uniforms.N.set(flatten(getNormalTransformMat3(V,M)));
 	// drawObject(gl, cone);
     //
 	// ///////////////////////////////////////////
@@ -138,8 +140,8 @@ function render() {
 	// drawObject(gl, surface);
 	// ///////////////////
 
-	unloadProgram(primitiveProgram, gl);
 
+	unloadProgram(phongProgram, gl);
 
 	useProgram(gl, primitiveProgram, sharedUniforms, sharedUniformData);
 
@@ -156,9 +158,6 @@ function render() {
 		drawObject(gl, lightModel);
 	});
 
-	sharedUniforms.M.set(flatten(scalem(1,1,1)));
-	setProgramAttributes(gl, BSM.surface , primitiveProgram);
-	drawObject(gl, BSM.surface);
 
 	gl.disable(gl.DEPTH_TEST);
 
