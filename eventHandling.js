@@ -62,10 +62,15 @@ function PointDragMS(msm){
 	var self = BaseMouseState(msm);
 
 	self.mousemove = function(){
+		var e = msm.getNDCFromViewPortPos(msm.mousePos);
+		var s = msm.getNDCFromViewPortPos(msm.prevMousePos);
 
+		draggablePoints.drag(s,e);
 	}
 
 	self.mousewheel = function(){};
+
+	return self;
 }
 
 function BaseMouseState(msm){
@@ -81,7 +86,11 @@ function BaseMouseState(msm){
 			msm.currentState = BaseMouseState(msm);
 		},
 		mousedown: function(){
-			msm.currentState = PinchRotateMS(msm);
+
+			if(draggablePoints.isDragAxisSelected())
+				msm.currentState = PointDragMS(msm);
+			else
+				msm.currentState = PinchRotateMS(msm);
 		},
 		mousewheel: function(delta){
 			camera.zoom(delta);
@@ -109,6 +118,10 @@ function MouseStateMachine(w,h, fovy){
 
 	self.getRayFromMousePos = function(){
 		return camera.getRayFromNDCPos(viewPortToNDC(self.mousePos, self.width, self.height));
+	}
+
+	self.getNDCFromViewPortPos = function(vpPos){
+		return viewPortToNDC(vpPos, self.width, self.height);
 	}
 
 	self.getNDCMousePos = function(){

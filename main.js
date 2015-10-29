@@ -165,6 +165,9 @@ function render() {
 
 	gl.lineWidth(1);
 
+	// var fdp = draggablePoints.points[1];
+	// fdp.position = add(fdp.position, vec3(0,0,0.1));
+
 	draggablePoints.points.forEach(function(dp){
 		M = mult(translate(dp.position[0], dp.position[1], dp.position[2]), scalem(5,5,5));
 		sharedUniforms.M.set(flatten(M));
@@ -175,22 +178,12 @@ function render() {
 	setProgramAttributes(gl, bezierSurf, primitiveProgram);
 	drawObject(gl, bezierSurf);
 
-	// sharedUniforms.M.set(flatten(scalem(10,10,10)));
-	// setProgramAttributes(gl, coordSys, primitiveProgram);
-	// gl.lineWidth(2);
-	// drawObject(gl, coordSys);
-    //
-	
 
 
 	if(draggablePoints.closestPoint){
-
 		gl.lineWidth(2);
-		drawGimbal(gl, sharedUniforms, primitiveProgram, draggablePoints.getNormalizedCPLocation(), 5, null);
+		drawGimbal(gl, sharedUniforms, primitiveProgram, draggablePoints.getNormalizedCPLocation(), 5, draggablePoints.closestPoint.state);
 	}
-
-	
-
 
 
 	// if(mouseRay){
@@ -206,19 +199,34 @@ function render() {
 	requestAnimFrame( render );
 }
 
+
+
 function drawGimbal(gl, sharedUniforms, program, pos, size, state){
+
+	function toggleThickLine(i){
+		if(state == i)
+			gl.lineWidth(5);
+		else
+			gl.lineWidth(2);
+	}
 
 	var M = mult(translate(pos[0],pos[1], pos[2]), scalem(size,size, size));
 	sharedUniforms.M.set(flatten(M));
 
+	toggleThickLine(1);
+	
 	program.uniforms.color.set([1,0,0,1]);
 	setProgramAttributes(gl, gimbal.r, primitiveProgram);
 	drawObject(gl, gimbal.r);
+
+	toggleThickLine(2);
 
 	program.uniforms.color.set([0,1,0,1]);
 	setProgramAttributes(gl, gimbal.g, primitiveProgram);
 	drawObject(gl, gimbal.g);
 
+
+	toggleThickLine(3);
 	program.uniforms.color.set([0,0,1,1]);
 	setProgramAttributes(gl, gimbal.b, primitiveProgram);
 	drawObject(gl, gimbal.b);

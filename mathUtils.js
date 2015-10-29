@@ -14,6 +14,26 @@ function LineSegment(a,b){
 	};
 }
 
+//returns position on ray1
+function get3DRaysIntersectionLeastSquares(ray1, ray2){
+
+	var A = [ [ray1.d[0],  - ray2.d[0]],
+	  	  [ray1.d[1],  - ray2.d[1]],
+	  	  [ray1.d[2],  - ray2.d[2]] ];
+
+	var b = subtract(ray2.o, ray1.o);
+
+	var AT = numeric.transpose(A);
+
+	var ATAInv = numeric.inv(numeric.dot(AT,A));
+
+	var ATAInvAT = numeric.dot(ATAInv,AT);
+
+	var coeffs = numeric.dot(ATAInvAT, b);
+
+	return ray1.getPosition(coeffs[0]);
+}
+
 //origin and direction are vec3, direction is normalized
 function Ray(origin, direction){
 
@@ -25,6 +45,12 @@ function Ray(origin, direction){
 	}
 
 	return {o, d, getPosition};
+}
+
+function projectPointOnRay(v, ray){
+	var toV = subtract(v, ray.o);
+	var projection = add(ray.o, scale(dot(toV, ray.d), ray.d));
+	return projection;
 }
 
 function multiplyMatrixByVector(M,v){
@@ -42,9 +68,10 @@ function multiplyMatrixByVector(M,v){
 }
 
 function vec3ToRayDistance(v, ray){
-	var toV = subtract(v, ray.o);
-	var projection = add(ray.o, scale(dot(toV, ray.d), ray.d));
+	// var toV = subtract(v, ray.o);
+	// var projection = add(ray.o, scale(dot(toV, ray.d), ray.d));
 	
+	var projection = projectPointOnRay(v, ray);
 	var normalComponent = subtract(projection, v);
 	return length(normalComponent);
 }

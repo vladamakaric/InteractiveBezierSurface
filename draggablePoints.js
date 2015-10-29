@@ -6,12 +6,20 @@ function DraggablePoints(opArr){
 		
 	self.points = opArr;
 	self.closestPoint = undefined;
-	self.dragging = false;
 
 	self.deactivate = function(){
 		self.closestPoint = undefined;
-		self.dragging = false;
 	}
+
+	self.isDragAxisSelected = function(){
+
+		if(!self.closestPoint) return false;
+
+
+		return self.closestPoint.state !== 0;
+	}
+
+	var dragAxes = [vec3(1,0,0), vec3(0,1,0), vec3(0,0,1)];
 
 	self.updateClosestPointToRay = function(ray, mousePos_ndc){
 
@@ -54,6 +62,43 @@ function DraggablePoints(opArr){
 		return add(scale(60, toCP), camera.eye);
 	}
 
+	function getDragAxisWorldRay(){
+		return Ray(self.closestPoint.position, dragAxes[self.closestPoint.state-1]);
+	}
+
+	function getDragAxisScreenRay(){
+		var origin = vec2(camera.worldToNDC(self.closestPoint.position));
+		var dAxis = dragAxes[self.closestPoint.state-1];
+		var secondPointOnScreenAxis = vec2(camera.worldToNDC(add(self.closestPoint.position, scale(10,dAxis))));
+
+		return Ray(origin, normalize(subtract(secondPointOnScreenAxis, origin)));
+	}
+
+	self.drag = function(start_ndc, end_ndc){
+
+		var screenRay = getDragAxisScreenRay();
+
+		var projS = projectPointOnRay(start_ndc, screenRay);
+		var projE = projectPointOnRay(end_ndc, screenRay);
+
+		var eR = camera.getRayFromNDCPos(projE);
+		var sR = camera.getRayFromNDCPos(projS);
+
+
+		var worldRay = getDragAxisWorldRay();
+
+		var wE = get3DRaysIntersectionLeastSquares(worldRay, eR);
+		var wS = get3DRaysIntersectionLeastSquares(worldRay, sR);
+
+		console.log("smorrrrrrrrrrrrrrrr");
+		console.log(subtract(wE, wS));
+
+		var delta = subtract(wE, wS);
+
+		self.closestPoint.position = add(self.closestPoint.position, delta);
+
+
+	}
 
 	function updateClosestPointGimbal(mousePos_ndc){
 		var gimbalSize = 5;
@@ -69,7 +114,11 @@ function DraggablePoints(opArr){
 		var blueLS = LineSegment(blue, origin);
 
 		self.closestPoint.state = getDraggablePointState(mousePos_ndc, redLS, greenLS, blueLS);
-		// console.log(redLS.distanceToVec(mousePos_ndc));
+
+		if(self.closestPoint.state != 0)
+			$('canvas').css( 'cursor', 'pointer' );
+		else
+			$('canvas').css( 'cursor', 'default' );
 	}
 	
 	return self;
