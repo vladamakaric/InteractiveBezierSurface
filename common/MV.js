@@ -389,6 +389,9 @@ function rotate( angle, axis )
 
 //----------------------------------------------------------------------------
 
+
+
+
 function scalem( x, y, z )
 {
     if ( Array.isArray(x) && x.length == 3 ) {
@@ -579,6 +582,9 @@ function dehomogenize(hv4){
 	return vec3(hv4[0]/w, hv4[1]/w, hv4[2]/w);
 }
 
+function getNormalized(u){
+	return normalize(scale(1, u));
+}
 
 function normalize( u, excludeLastComponent )
 {

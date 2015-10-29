@@ -46,8 +46,6 @@ function getObservableControlPointsForBezierSurface(startPos, xDiff, zDiff, call
 	return oCPoints;
 }
 
-
-
 function observableControlPointsToVec3Matrix(oPoints){
 	var controlPoints = [];
 

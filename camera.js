@@ -8,8 +8,6 @@ function Camera(eye, dir, up, vFov, aspect, near, far){
 	self.eye = eye;
 	self.dir = dir;
 	self.up = up;
-	self.vFov = vFov;
-	self.aspect = aspect;
 
 	function changeView(newEye, newDir, newUp){
 		self.eye = newEye || self.eye;
@@ -18,6 +16,22 @@ function Camera(eye, dir, up, vFov, aspect, near, far){
 
 		V = lookAt(self.eye, add(self.eye,self.dir), self.up);
 		VInv = inverse(V);
+	}
+
+	self.isVisible = function(v_ws){
+		var v_cs = mult(V, vec4(v_ws,1));
+		var v = mult(P, v_cs);
+
+		var w = v[3];
+
+		var visible = true;
+
+		//clipping
+		for(var i=0; i<3; i++){
+			visible = visible && (-w < v[i]  && v[i] < w);
+		}
+
+		return visible;
 	}
 
 	self.zoom = function(f){
@@ -38,8 +52,10 @@ function Camera(eye, dir, up, vFov, aspect, near, far){
 		return P;
 	}
 
+	//calculates a WS ray that goes from the eye through the
+	//specified ndc screen position 
 	self.getRayFromNDCPos = function(p_ndc){
-		var rdir_cs = rayVectorFromNDC(p_ndc, self.vFov, self.aspect);
+		var rdir_cs = rayVectorFromNDC(p_ndc, vFov, aspect);
 		var rdir_ws = vec3(mult(VInv, vec4(rdir_cs,0)));
 
 		return Ray(self.eye, normalize(rdir_ws));
@@ -49,7 +65,10 @@ function Camera(eye, dir, up, vFov, aspect, near, far){
 		return VInv;
 	}
 
-
+	//the camera always looks at 0,0,0, because this is a 
+	//model explorer app (bezier surface interaction)
+	//so the eye is always rotated around the origin along with 
+	//the up and dir vectors
 	self.rotateAroundWSOrigin = function(angle, axis_cs){
 		var axis_ws = mult(VInv, vec4(axis_cs,0));	
 

@@ -14,16 +14,9 @@ var primitiveProgram;
 var lightModel;
 
 var lightPosition;
-var bezierSurf;
-var coordSys;
 
-var mouseRay;
 var camera;
-
-var mouseRay;
-
 var draggablePoints;
-
 var gimbal;
 var BSM;
 
@@ -94,20 +87,13 @@ window.onload = function init()
 
 	setUpEventHandling(canvas, fovy);
 	render();
-
-
-
-
 };
-
-
 
 function setUniformData(uniforms, data){
 	Object.keys(data).forEach(function(k){
 		uniforms[k].set(data[k]);
 	});
 }
-
 
 function render() {
 	gl.clear(gl.COLOR_BUFFER_BIT  | gl.DEPTH_BUFFER_BIT);
@@ -163,9 +149,7 @@ function render() {
 
 	gl.lineWidth(1);
 
-	// var fdp = draggablePoints.points[1];
-	// fdp.position = add(fdp.position, vec3(0,0,0.1));
-
+	// if(draggablePoints.closestPoint)
 	draggablePoints.points.forEach(function(dp){
 		M = mult(translate(dp.position[0], dp.position[1], dp.position[2]), scalem(2,2,2));
 		sharedUniforms.M.set(flatten(M));
@@ -185,15 +169,6 @@ function render() {
 
 	gl.enable(gl.DEPTH_TEST);
 
-	// if(mouseRay){
-	// 	var endP = add(mouseRay.o, scale(20, mouseRay.d));
-    //
-	// 	var line = Line(gl, endP, add(mouseRay.o, scale(100, mouseRay.d)));
-    //
-	// 	setProgramAttributes(gl, line, primitiveProgram);
-	// 	sharedUniforms.M.set(flatten(scalem(1,1,1)));
-	// 	drawObject(gl, line);
-	// }
 
 	requestAnimFrame( render );
 }
