@@ -5,6 +5,13 @@ function createFloatArrayBuffer(gl, elSize, array){
 	return {id: arrBuffer, elSize: elSize};
 }
 
+function createIndexBuffer(gl, indices){
+	var indexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+	return indexBuffer;
+}
+
 function loadTexture(gl,filename){
 
 	var texture = gl.createTexture();
@@ -95,16 +102,14 @@ function Line(gl, pos1, pos2){
 	return {attribBuffers,  nVerts: 2, primtype: gl.LINES};
 }
 
-function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
+function getParametricSurfaceVertices(surf, uSamples, vSamples){
 	var du = 1/(uSamples-1);
 	var dv = 1/(vSamples-1);
 	var i,j;
-
 	var vertices = [];
+
 	// var texCoords = [];
 	// var normals = [];
-	var colors = [];
-	var indices = [];
 
 	for(i=0; i<uSamples; i++){
 		var u = i*du;
@@ -124,23 +129,15 @@ function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
 		}
 	}
 
-	// normals = concatenateArrOfArrs(normals);
+	return vertices;
+}
 
-	indices = getIndicesForGridMeshTriangleStrip(uSamples,vSamples);
 
-	var colors = [];
-
-	for(var i=0; i<vertices.length/3; i++){
-		colors.push(Math.random(), Math.random(), Math.random(), 1);
-	}
-
-	var colorBuffer = createFloatArrayBuffer(gl, 4, colors);
+function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
+	var indices = getIndicesForGridMeshTriangleStrip(uSamples,vSamples);
+	var vertices = getParametricSurfaceVertices(surf, uSamples, vSamples);
 	var vertexBuffer = createFloatArrayBuffer(gl, 3, vertices);
-
-
-	var indexBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+	var indexBuffer = createIndexBuffer(gl, indices);
 
 	var attribBuffers = {vertex: vertexBuffer};
 

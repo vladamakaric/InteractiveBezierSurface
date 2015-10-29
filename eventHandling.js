@@ -154,6 +154,13 @@ function setUpEventHandling(canvas, fov){
 
 	var msm = MouseStateMachine(canvas.width, canvas.height, fov);
 
+	draggablePoints.onCPStateChange = function(){
+		if(draggablePoints.closestPoint.state !=0)
+			$('canvas').css( 'cursor', 'pointer' );
+		else
+			$('canvas').css( 'cursor', 'default' );
+	}
+
 	var angleInput = document.getElementById("angle");
 	// angleInput.value = fovy;
 

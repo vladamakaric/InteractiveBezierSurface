@@ -25,6 +25,7 @@ var mouseRay;
 var draggablePoints;
 
 var gimbal;
+var BSM;
 
 window.onload = function init()
 {
@@ -42,7 +43,11 @@ window.onload = function init()
 	lightPosition = ObservablePoint(vec3(0,60,0));
 	camera = Camera(vec3(100,100,100), vec3(-1,-1,-1), vec3(0,1,0), fovy,  canvas.width/canvas.height, 1,1000); 
 
-	draggablePoints = DraggablePoints([ObservablePoint(vec3(100,100,-100)), lightPosition]);
+	draggablePoints = DraggablePoints([ObservablePoint(vec3(100,100,-100))]);
+	draggablePoints.addObservablePoints([lightPosition]);
+
+	BSM = BezierSurfaceModel(vec3(0,0,0), 10, 10, 30, 30);
+	draggablePoints.addObservablePoints(BSM.controlPoints);
 
 	// phongProgram = ShaderProgram(gl, "phong-vshader", "phong-fshader", {
 	// 	normal: {name: "aNormal_ms"},
@@ -74,14 +79,6 @@ window.onload = function init()
 
 	lightModel = Tetrahedron(gl);
 
-	var q = [
-				[vec3(0,0,0), vec3(10,0,0), vec3(20,0,0), vec3(30,0,0)],
-				[vec3(0,0,10), vec3(10,0,10), vec3(20,0,10), vec3(30,-50,10)],
-				[vec3(0,0,20), vec3(10,0,20), vec3(20,0,20), vec3(30,50,20)],
-				[vec3(0,0,30), vec3(10,0,30), vec3(20,0,30), vec3(30,0,30)]
-			];
-
-	bezierSurf = parametricSurface(function(u,v){ return bezierSurface(u,v,q);}, 0, 0, 30,30);
 	coordSys = CoordSys(gl);
 	
 	texture = loadTexture(gl,"metal2.jpg");
@@ -94,6 +91,7 @@ window.onload = function init()
 		g: Line(gl, origin, vec3(0,1,0)),
 		b: Line(gl, origin, vec3(0,0,1))
 	};
+
 	setUpEventHandling(canvas, fovy);
 	render();
 
@@ -169,22 +167,23 @@ function render() {
 	// fdp.position = add(fdp.position, vec3(0,0,0.1));
 
 	draggablePoints.points.forEach(function(dp){
-		M = mult(translate(dp.position[0], dp.position[1], dp.position[2]), scalem(5,5,5));
+		M = mult(translate(dp.position[0], dp.position[1], dp.position[2]), scalem(2,2,2));
 		sharedUniforms.M.set(flatten(M));
 		drawObject(gl, lightModel);
 	});
 
 	sharedUniforms.M.set(flatten(scalem(1,1,1)));
-	setProgramAttributes(gl, bezierSurf, primitiveProgram);
-	drawObject(gl, bezierSurf);
+	setProgramAttributes(gl, BSM.surface , primitiveProgram);
+	drawObject(gl, BSM.surface);
 
-
+	gl.disable(gl.DEPTH_TEST);
 
 	if(draggablePoints.closestPoint){
 		gl.lineWidth(2);
 		drawGimbal(gl, sharedUniforms, primitiveProgram, draggablePoints.getNormalizedCPLocation(), 5, draggablePoints.closestPoint.state);
 	}
 
+	gl.enable(gl.DEPTH_TEST);
 
 	// if(mouseRay){
 	// 	var endP = add(mouseRay.o, scale(20, mouseRay.d));

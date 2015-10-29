@@ -7,6 +7,12 @@ function DraggablePoints(opArr){
 	self.points = opArr;
 	self.closestPoint = undefined;
 
+	self.addObservablePoints = function(opoints){
+		self.points =self.points.concat(opoints);
+	}
+
+	self.onCPStateChange = function(){}
+
 	self.deactivate = function(){
 		self.closestPoint = undefined;
 	}
@@ -27,7 +33,7 @@ function DraggablePoints(opArr){
 		var maxDist = 20;
 		var minDist = Infinity;
 
-		opArr.forEach(function(op){
+		self.points.forEach(function(op){
 			var dist = vec3ToRayDistance(op.position, ray);
 
 			if(dist < minDist && dist < maxDist){
@@ -90,8 +96,6 @@ function DraggablePoints(opArr){
 		var wE = get3DRaysIntersectionLeastSquares(worldRay, eR);
 		var wS = get3DRaysIntersectionLeastSquares(worldRay, sR);
 
-		console.log("smorrrrrrrrrrrrrrrr");
-		console.log(subtract(wE, wS));
 
 		var delta = subtract(wE, wS);
 
@@ -114,23 +118,19 @@ function DraggablePoints(opArr){
 		var blueLS = LineSegment(blue, origin);
 
 		self.closestPoint.state = getDraggablePointState(mousePos_ndc, redLS, greenLS, blueLS);
-
-		if(self.closestPoint.state != 0)
-			$('canvas').css( 'cursor', 'pointer' );
-		else
-			$('canvas').css( 'cursor', 'default' );
+		self.onCPStateChange();
 	}
 	
 	return self;
 }
 
-function ObservablePoint(position){
+function ObservablePoint(position, changeListener){
 	var self = {};
-	var changeListener = function(){};
+	self.changeListener = changeListener ||  function(){};
 
 	Object.defineProperty(self, "position", {
 		get: function() { return position; },
-		set: function(pos) { position = pos; changeListener(); }
+		set: function(pos) { position = pos; self.changeListener(); }
 	});
 
 	return self;
