@@ -39,7 +39,7 @@ window.onload = function init()
 	draggablePoints = DraggablePoints([ObservablePoint(vec3(100,100,-100))]);
 	draggablePoints.addObservablePoints([lightPosition]);
 
-	BSM = BezierSurfaceModel(vec3(-20,0,-20), 10, 10, 30, 30);
+	BSM = BezierSurfaceModel(vec3(-15,0,-15), 10, 10, 20, 20);
 	draggablePoints.addObservablePoints(BSM.controlPoints);
 
 	phongProgram = ShaderProgram(gl, "phong-vshader", "phong-fshader", {
@@ -113,36 +113,15 @@ function render() {
 	M = scalem(1,1,1);
 	phongProgram.uniforms.N.set(flatten(getNormalTransformMat3(V,M)));
 	sharedUniforms.M.set(flatten(M));
-	////////////////////////////////////////////////////
 	gl.bindTexture(gl.TEXTURE_2D, texture2);
 
 	setProgramAttributes(gl, BSM.surface , phongProgram);
 	drawObject(gl, BSM.surface);
 
-    //
-	// M = mult(translate(-60, 0, 0), scalem(20,50,20));
-	// sharedUniforms.M.set(flatten(M));
-	// drawObject(gl, cone);
-    //
-	// ///////////////////////////////////////////
-	// gl.bindTexture(gl.TEXTURE_2D, texture);
-	// setProgramAttributes(gl, surface, phongProgram); 
-	// M = mult(translate(0, 0, 20), scalem(1,1,1));
-	// sharedUniforms.M.set(flatten(M));
-	// phongProgram.uniforms.N.set(flatten(getNormalTransformMat3(V,M)));
-	// drawObject(gl, surface);
-	// ////////////////////
-    //
-	// setProgramAttributes(gl, surface2, phongProgram); 
-	// M = mult(translate(0, 0, -50), scalem(1,1,1));
-	// sharedUniforms.M.set(flatten(M));
-	// phongProgram.uniforms.N.set(flatten(getNormalTransformMat3(V,M)));
-	// drawObject(gl, surface);
-	// ///////////////////
-
 
 	unloadProgram(phongProgram, gl);
 
+	////////////////////////////////////////////////////
 	useProgram(gl, primitiveProgram, sharedUniforms, sharedUniformData);
 
 	primitiveProgram.uniforms.color.set([1,1,1,1]);

@@ -134,7 +134,7 @@ function getCentralizedCoords(v, w, h){
 }
 
 function getSphereIntercept(v, w, h){
-	var r = h/2;
+	var r = h;
 	var l = length(v);
 
 	//when outside of sphere map vector to circle 

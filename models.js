@@ -123,12 +123,18 @@ function getParametricSurfaceTexCoords(surf, uSamples, vSamples){
 	return texCoords;
 }
 
-function getParametricSurfaceNormals(surf, uSamples, vSamples){
+function getParametricSurfaceNormals(surf, uDeriv, vDeriv, uSamples, vSamples){
 	var normals = [];
 
 	iterateThroughParameterSpace(uSamples, vSamples, function(u,v){
 		var p = surf(u,v);
-		normals.push(0,1,0);
+
+		var ud = uDeriv(u,v);
+		var vd = vDeriv(u,v);
+
+		var normal = cross(ud, vd);
+
+		normals.push(normal[0],normal[1],normal[2]);
 	});
 
 	return normals;
@@ -168,7 +174,7 @@ function iterateThroughParameterSpace(uSamples, vSamples, iteratee){
 function parametricSurface(surf, uPderiv, vPderiv, uSamples, vSamples){
 	var indices = getIndicesForGridMeshTriangleStrip(uSamples,vSamples);
 	var vertices = getParametricSurfaceVertices(surf, uSamples, vSamples);
-	var normals = getParametricSurfaceNormals(surf, uSamples, vSamples);
+	var normals = getParametricSurfaceNormals(surf, uPderiv, vPderiv, uSamples, vSamples);
 	var texCoords = getParametricSurfaceTexCoords(surf, uSamples, vSamples);
 
 	var indexBuffer = createIndexBuffer(gl, indices);

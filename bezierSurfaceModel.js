@@ -7,20 +7,37 @@ function BezierSurfaceModel(startPos, xDiff, zDiff, uSamples, vSamples){
 
 	self.controlPoints = getObservableControlPointsForBezierSurface(startPos, xDiff, zDiff, recompute);
 
-	function getNewBezierSurfaceSampler(){
-		var controlPointGrid = observableControlPointsToVec3Matrix(self.controlPoints);
+	function getNewBezierSurfaceSampler(grid){
 
 		return function(u,v){
-			return bezierSurface(u,v, controlPointGrid);
+			return bezierSurface(u,v, grid);
 		}
 	}
+
+	function getUPDeriv(grid){
+		return function(u,v) {
+			return bezierSurfaceUDerivative(u,v, grid);
+		};
+	}
+
+	function getVPDeriv(grid){
+		return function(u,v) {
+			return bezierSurfaceVDerivative(u,v, grid);
+		};
+	}
+
+	var controlPointGrid = observableControlPointsToVec3Matrix(self.controlPoints);
 	
-	var surf = parametricSurface(getNewBezierSurfaceSampler(), 0, 0, uSamples, vSamples);
+	var surf = parametricSurface(getNewBezierSurfaceSampler(controlPointGrid), 
+								getUPDeriv(controlPointGrid),
+								getVPDeriv(controlPointGrid),
+								uSamples,
+								vSamples);
 
 	function recompute(){
-		var vbuff = surf.attribBuffers.vertex;
 
-		var bsSampler = getNewBezierSurfaceSampler();
+		var controlPointGrid = observableControlPointsToVec3Matrix(self.controlPoints);
+		var bsSampler = getNewBezierSurfaceSampler(controlPointGrid);
 
 		var vertices =  getParametricSurfaceVertices(
 						bsSampler, 
@@ -29,6 +46,8 @@ function BezierSurfaceModel(startPos, xDiff, zDiff, uSamples, vSamples){
 
 		var normals =   getParametricSurfaceNormals(
 						bsSampler, 
+						getUPDeriv(controlPointGrid),
+						getVPDeriv(controlPointGrid),
 						self.uSamples,
 						self.vSamples);
 
