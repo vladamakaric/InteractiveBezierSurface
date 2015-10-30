@@ -134,9 +134,36 @@ void main() {
 <script type="text/javascript" src="eventHandling.js"></script>
 <script type="text/javascript" src="main.js"></script>
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<LINK href="style.css" rel="stylesheet" type="text/css">
+<title>Interactive Bezier surface</title>
+
 </head>
 	<body>
-		<canvas id="gl-canvas" width="800" height="800">
-		</canvas>
+		<div id="center">
+			<h1>Interactive Bezier surface</h1>
+			<canvas id="gl-canvas" width="800" height="800">
+	</canvas>
+
+					
+	<div id="btn">
+						 <button type="button" id = "switchTexture" >Switch texture</button>
+	</div>
+
+					<div>
+						<h2>Instructions</h2>
+
+<ul style="list-style-type:square">
+  <li>Zoom in with mouse scroll or w/s keys</li>
+  <li>The yellow tetrahedron above the surface is the light source, it can be dragged by the mouse</li>
+  <li>The control points of the Bezier surface are drawn as wireframe cubes, they can be dragged by the mouse</li>
+</ul>
+
+		 </div>
+				<footer>
+				  <p>Vladimir Makarić 2015,  <a href="https://github.com/vladamakaric/InteractiveBezierSurface">github</a>  </p>
+				</footer>	
+		</div>
 	</body>
 </html>

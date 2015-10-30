@@ -41,7 +41,7 @@ function DraggablePoints(opArr){
 	self.updateClosestPointToRay = function(ray, mousePos_ndc){
 
 		var cp = undefined;
-		var maxDist = 20;
+		var maxDist = 10;
 		var minDist = Infinity;
 
 		self.points.forEach(function(op){
@@ -57,6 +57,8 @@ function DraggablePoints(opArr){
 
 		if(cp)
 			updateClosestPointGimbal(mousePos_ndc);
+
+		self.onCPStateChange();
 	};
 
 	//every closest point selected is drawn at a fixed distance from the eye so that the gimbal is 
@@ -125,7 +127,6 @@ function DraggablePoints(opArr){
 		var blueLS = LineSegment(blue, origin);
 
 		self.closestPoint.state = getDraggablePointState();
-		self.onCPStateChange();
 	}
 	
 	return self;

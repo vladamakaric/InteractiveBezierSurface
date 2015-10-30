@@ -3,6 +3,7 @@ var t = 0;
 
 
 var texture;
+var texture1;
 var texture2;
 
 var sharedUniforms;
@@ -15,10 +16,13 @@ var lightModel;
 
 var lightPosition;
 
+var cube;
 var camera;
 var draggablePoints;
 var gimbal;
 var BSM;
+
+var gridLinesBuffer;
 
 window.onload = function init()
 {
@@ -73,9 +77,13 @@ window.onload = function init()
 	lightModel = Tetrahedron(gl);
 
 	coordSys = CoordSys(gl);
-	
-	texture = loadTexture(gl,"metal2.jpg");
+	cube = Cube(gl);
+	gridLinesBuffer = gl.createBuffer();
+
+	texture1 = loadTexture(gl,"metal5.jpg");
 	texture2 = loadTexture(gl,"wood2.jpg");
+
+	texture = texture2;
 
 	var origin = vec3(0,0,0);
 
@@ -88,6 +96,13 @@ window.onload = function init()
 	setUpEventHandling(canvas, fovy);
 	render();
 };
+function switchTexture(){
+	if(texture == texture1)
+		texture = texture2;
+	else
+		texture = texture1;
+}
+
 
 function setUniformData(uniforms, data){
 	Object.keys(data).forEach(function(k){
@@ -106,18 +121,16 @@ function render() {
 	var sharedUniformData = {P: flatten(P),
 							 V: flatten(V)};
 
-
 	unloadProgram(primitiveProgram, gl);
 	useProgram(gl, phongProgram, sharedUniforms, sharedUniformData);
 	phongProgram.uniforms.lightPosition_ws.set(flatten(lightPosition.position));
 	M = scalem(1,1,1);
 	phongProgram.uniforms.N.set(flatten(getNormalTransformMat3(V,M)));
 	sharedUniforms.M.set(flatten(M));
-	gl.bindTexture(gl.TEXTURE_2D, texture2);
+	gl.bindTexture(gl.TEXTURE_2D, texture);
 
 	setProgramAttributes(gl, BSM.surface , phongProgram);
 	drawObject(gl, BSM.surface);
-
 
 	unloadProgram(phongProgram, gl);
 
@@ -126,19 +139,29 @@ function render() {
 
 	primitiveProgram.uniforms.color.set([1,1,1,1]);
 
-	setProgramAttributes(gl, lightModel, primitiveProgram); 
+	setProgramAttributes(gl, cube, primitiveProgram); 
 
 	gl.lineWidth(1);
 
-	// if(draggablePoints.closestPoint)
-	draggablePoints.points.forEach(function(dp){
-		M = mult(translate(dp.position[0], dp.position[1], dp.position[2]), scalem(2,2,2));
-		sharedUniforms.M.set(flatten(M));
-		drawObject(gl, lightModel);
-	});
-
-
 	gl.disable(gl.DEPTH_TEST);
+
+	if(draggablePoints.closestPoint && draggablePoints.closestPoint != lightPosition){
+
+		BSM.controlPoints.forEach(function(dp){
+			M = mult(translate(dp.position[0], dp.position[1], dp.position[2]), scalem(0.5,0.5,0.5));
+			sharedUniforms.M.set(flatten(M));
+			drawObject(gl, cube);
+		});
+
+		drawControlGrid(gl, sharedUniforms, primitiveProgram);
+	}
+
+	M = mult(translate(lightPosition.position[0], lightPosition.position[1], lightPosition.position[2]), scalem(5,5,5));
+	primitiveProgram.uniforms.color.set([1,1,0,1]);
+	setProgramAttributes(gl, lightModel, primitiveProgram); 
+	sharedUniforms.M.set(flatten(M));
+	drawObject(gl, lightModel);
+
 
 	if(draggablePoints.closestPoint){
 		gl.lineWidth(2);
@@ -151,7 +174,40 @@ function render() {
 	requestAnimFrame( render );
 }
 
+function drawControlGrid(gl, sharedUniforms, program){
 
+	var vertices = [];
+
+	BSM.controlPoints.forEach(function(dp, i){
+		if(i%4 == 1 || i%4 ==2)
+			vertices.push(dp.position[0], dp.position[1], dp.position[2]);
+		vertices.push(dp.position[0], dp.position[1], dp.position[2]);
+	});
+
+	BSM.controlPoints.forEach(function(dp, i){
+		var j = i + 4;
+		if(i<12){
+			vertices.push(dp.position[0], dp.position[1], dp.position[2]);
+			var sp = BSM.controlPoints[j].position;
+			vertices.push(sp[0], sp[1], sp[2]);
+		}
+	});
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, gridLinesBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+	var vertexBuffer = {id: gridLinesBuffer, elSize: 3}; 
+	var attribBuffers = {vertex: vertexBuffer};
+	var lines =  {attribBuffers,  nVerts: 48, primtype: gl.LINES};
+
+	setProgramAttributes(gl, lines, primitiveProgram); 
+	sharedUniforms.M.set(flatten(scalem(1,1,1)));
+
+	primitiveProgram.uniforms.color.set([1,1,1,1]);
+
+	program.uniforms.color.set([0,1,1,1]);
+	drawObject(gl, lines);
+}
 
 function drawGimbal(gl, sharedUniforms, program, pos, size, state){
 
@@ -176,7 +232,6 @@ function drawGimbal(gl, sharedUniforms, program, pos, size, state){
 	program.uniforms.color.set([0,1,0,1]);
 	setProgramAttributes(gl, gimbal.g, primitiveProgram);
 	drawObject(gl, gimbal.g);
-
 
 	toggleThickLine(3);
 	program.uniforms.color.set([0,0,1,1]);

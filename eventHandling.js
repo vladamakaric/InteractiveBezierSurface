@@ -2,8 +2,17 @@
 function setUpEventHandling(canvas, fov){
 	var msm = MouseStateMachine(canvas.width, canvas.height, fov);
 
+	$( "#switchTexture" ).click(function() {
+		switchTexture();
+	});
+
 	draggablePoints.onCPStateChange = function(){
-		if(draggablePoints.closestPoint.state !=0)
+
+
+
+		if(!draggablePoints.closestPoint)
+			$('canvas').css( 'cursor', 'default' );
+		else if(draggablePoints.closestPoint.state !=0)
 			$('canvas').css( 'cursor', 'pointer' );
 		else
 			$('canvas').css( 'cursor', 'default' );
@@ -30,5 +39,23 @@ function setUpEventHandling(canvas, fov){
 	canvas.onmousewheel = function (event){
 	  var direction = (event.detail<0 || event.wheelDelta>0) ? 1 : -1;
 	  msm.mousewheel(direction);
+	  //stops event propagation, so it doesnt scroll the page also
+	  return false;
 	}
+	
+	document.onkeydown = checkKey;
+
+	function checkKey(e) {
+		e = e || window.event;
+
+		switch(e.keyCode){
+			case 83: //s
+				msm.mousewheel(-1);
+				break;
+			case 87: //w
+				msm.mousewheel(1);
+				break;
+		}
+	}
+
 }

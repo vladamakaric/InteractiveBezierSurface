@@ -275,132 +275,63 @@ function Tetrahedron(gl){
 }
 
 
-function createCube(gl) {
-
-	var normalBuffer = createFloatArrayBuffer(gl, 3, [
-			0,0,1.0,
-			0,0,1.0,
-			0,0,1.0,
-			0,0,1.0,
-
-			0,0,-1.0,
-			0,0,-1.0,
-			0,0,-1.0,
-			0,0,-1.0,
-
-			0,1.0,0,
-			0,1.0,0,
-			0,1.0,0,
-			0,1.0,0,
-
-			0,-1.0,0,
-			0,-1.0,0,
-			0,-1.0,0,
-			0,-1.0,0,
-
-			1.0,0,0,
-			1.0,0,0,
-			1.0,0,0,
-			1.0,0,0,
-
-			-1.0,0,0,
-			-1.0,0,0,
-			-1.0,0,0,
-			-1.0,0,0
-				]);
+function Cube(gl) {
 
 	var vertexBuffer = createFloatArrayBuffer(gl, 3, [
-		// Front face
+		//upper front 
 		-1.0, -1.0, 1.0,
 		1.0, -1.0, 1.0,
+
+		//upper back 
+		-1.0, -1.0, -1.0,
+		1.0, -1.0, -1.0,
+
+		//lower front
 		1.0, 1.0, 1.0,
 		-1.0, 1.0, 1.0,
 
-		// Back face
+		//lower back
+		1.0, 1.0, -1.0,
+		-1.0, 1.0, -1.0,
+
+		//left back 
 		-1.0, -1.0, -1.0,
 		-1.0, 1.0, -1.0,
+
+		//right back
 		1.0, 1.0, -1.0,
 		1.0, -1.0, -1.0,
 
-		// Top face
+		//left Top 
 		-1.0, 1.0, -1.0,
 		-1.0, 1.0, 1.0,
+
+		//right Top
 		1.0, 1.0, 1.0,
 		1.0, 1.0, -1.0,
 
 		// Bottom face
-		-1.0, -1.0, -1.0,
+
+		//bottom right
 		1.0, -1.0, -1.0,
 		1.0, -1.0, 1.0,
+
+		//bottom left
+		-1.0, -1.0, -1.0,
 		-1.0, -1.0, 1.0,
 
-		// Right face
-		1.0, -1.0, -1.0,
-		1.0, 1.0, -1.0,
-		1.0, 1.0, 1.0,
-		1.0, -1.0, 1.0,
-
-		// Left face
-		-1.0, -1.0, -1.0,
+		// front left 
 		-1.0, -1.0, 1.0,
 		-1.0, 1.0, 1.0,
-		-1.0, 1.0, -1.0
+
+		//front right
+		1.0, 1.0, 1.0,
+		1.0, -1.0, 1.0
 			]);
 
+	var attribBuffers = {vertex: vertexBuffer};
 
-	var texCoordBuffer = createFloatArrayBuffer( gl, 2, [
-				0,1, 
-				1,1,
-				1,0,
-				0,0,
-
-				0,1, 
-				1,1,
-				1,0,
-				0,0,
-
-				0,1, 
-				1,1,
-				1,0,
-				0,0,
-
-				0,1, 
-				1,1,
-				1,0,
-				0,0,
-
-				0,1, 
-				1,1,
-				1,0,
-				0,0,
-
-				0,1, 
-				1,1,
-				1,0,
-				0,0
-					]);
-
-	var cubeIndexBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeIndexBuffer);
-
-	var cubeIndices = [
-		0, 1, 2,      0, 2, 3,    // Front face
-		4, 5, 6,      4, 6, 7,    // Back face
-		8, 9, 10,     8, 10, 11,  // Top face
-		12, 13, 14,   12, 14, 15, // Bottom face
-		16, 17, 18,   16, 18, 19, // Right face
-		20, 21, 22,   20, 22, 23  // Left face
-			];
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeIndices), gl.STATIC_DRAW);
-
-	//imena buffer-a odgovaraju imenima atributa u js objektu koji 
-	//predstavlja shader program, da bi se lako povezali
-	var attribBuffers = {vertex: vertexBuffer,
-				   normal: normalBuffer,
-				   texcoord: texCoordBuffer};
-
-	var cube = {indxBuffer:cubeIndexBuffer,attribBuffers,  
-		nVerts:24, nIndices:36, primtype: gl.TRIANGLES};
+	var cube = {attribBuffers,  nVerts:24,  primtype: gl.LINES};
 
 	return cube;
 }
